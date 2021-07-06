@@ -6,7 +6,7 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-chunk-stream = {git="https://github.com/wangjun861205/chunk-stream-rs.git"}
+nb-chunk-stream-rs = {git="https://github.com/wangjun861205/nb-chunk-stream-rs.git"}
 sha2 = "0.9.5"
 num_cpus = "1.13"
 bytes = "1.0.1"

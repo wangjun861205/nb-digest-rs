@@ -1,6 +1,6 @@
 use bytes::Bytes;
-use chunk_stream::{ChunkStream, Error};
 use futures::StreamExt;
+use nb_chunk_stream_rs::{ChunkStream, Error};
 use num_cpus::get;
 use sha2::Digest;
 use std::sync::mpsc::channel;
