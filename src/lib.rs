@@ -1,27 +1,29 @@
 use bytes::Bytes;
 use futures::StreamExt;
-use nb_chunk_stream_rs::{ChunkStream, Error};
+use nb_chunk_stream_rs::ChunkStream;
 use num_cpus::get;
 use sha2::Digest;
 use std::sync::mpsc::channel;
 use std::thread::spawn;
 
-pub struct Digester<D>
+pub struct Digester<D, E>
 where
     D: Digest + Send + Sync + Clone,
+    E: std::error::Error + Send + Sync + 'static,
 {
     digest: D,
-    stream: ChunkStream,
+    stream: ChunkStream<E>,
 }
 
-impl<D> Digester<D>
+impl<D, E> Digester<D, E>
 where
     D: Digest + Send + Sync + Clone + 'static,
+    E: std::error::Error + Send + Sync + 'static,
 {
-    pub fn new(digest: D, stream: ChunkStream) -> Self {
+    pub fn new(digest: D, stream: ChunkStream<E>) -> Self {
         Self { digest, stream }
     }
-    pub async fn calc(mut self) -> Result<Vec<u8>, Error> {
+    pub async fn calc(mut self) -> Result<Vec<u8>, Box<dyn std::error::Error + Send + Sync>> {
         let num_of_cpu = get();
         let mut txs = Vec::new();
         let mut handles = Vec::new();
@@ -44,7 +46,7 @@ where
                         return Err(Box::new(e));
                     }
                 }
-                Err(e) => return Err(e),
+                Err(e) => return Err(e.into()),
             }
         }
         drop(txs);
@@ -69,7 +71,7 @@ async fn test_digest() {
         }
         l.push(buf.freeze());
     }
-    let s = iter(l).map(|v| Ok::<Bytes, Error>(v));
+    let s = iter(l).map(|v| Ok::<Bytes, std::convert::Infallible>(v));
     let mut cs = ChunkStream::with_capacity(Box::new(s), 100);
     let d = Digester::new(Sha256::new(), cs);
     println!("{:?}", d.calc().await.unwrap());
